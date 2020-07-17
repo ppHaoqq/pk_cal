@@ -45,8 +45,8 @@ for i, url in enumerate(urls):
         continue
     # error があった場合は空欄で対処
     try:
-        weight = soup2.select('#base_anchor > table > tr:nth-child(7) > td:nth-child(2) > ul > li:nth-child(1)')
-        weight = weight[0].text.replace('kg', '')
+        li_box = [s.find_all('li') for s in soup2.select('.center') if not s.find_all('li') == []]
+        weight = float(li_box[0][0].text.replace('kg', ''))
     except:
         weight = ''
     try:
@@ -74,27 +74,13 @@ for i, url in enumerate(urls):
     except:
         s = ''
     try:
-        type1 = soup2.select('#base_anchor > table >  tr:nth-child(8) > td:nth-child(2) > ul > li:nth-child(1) > a > img')[0].attrs.get('alt')
-        type2 = soup2.select('#base_anchor > table >  tr:nth-child(8) > td:nth-child(2) > ul > li:nth-child(2) > a > img')
+        type_ = li_box[1]
+        type1 = type_[0].find('img').get('alt')
+        type2 = ''
+        if len(type_) > 1:
+            type2 = type_[1].find('img').get('alt')
     except:
-        try:
-            type1 = soup2.select('#base_anchor > table > tr:nth-child(7) > td:nth-child(2) > ul > li:nth-child(1) > a > img')[0].attrs.get('alt')
-            type2 = soup2.select('#base_anchor > table > tr:nth-child(7) > td:nth-child(2) > ul > li:nth-child(2) > a > img')
-        except:
-            try:
-                type1 = soup2.select('#base_anchor > table > tr:nth-child(7) > td:nth-child(2) > ul > li > a > img')[0].attrs.get('alt')
-                type2 = []
-            except:
-                try:
-                    type1 = soup2.select('#base_anchor > table > tr:nth-child(9) > td:nth-child(2) > ul > li:nth-child(1) > a > img')[0].attrs.get('alt')
-                    type2 = soup2.select('#base_anchor > table > tr:nth-child(9) > td:nth-child(2) > ul > li:nth-child(2) > a > img')
-                except:
-                    type1 = soup2.select('#base_anchor > table > tr:nth-child(9) > td:nth-child(2) > ul > li > a > img')[0].attrs.get('alt')
-                    type2 = []
-
-    if not type2 == []:
-        type2 = type2[0].attrs.get('alt')
-    else:
+        type1 = ''
         type2 = ''
 
     poke = {'name': name, 'type1': type_num[type1], 'type2': type_num[type2], 'weight': weight, 'h': h, 'a': a, 'b': b,
