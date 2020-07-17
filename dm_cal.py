@@ -2,14 +2,11 @@ import pandas as pd
 import math
 from pathlib import Path, PurePath
 
-poke_path = Path(r'C:\Users\g2945\Desktop\jupyter\DMcal\種族値.csv')
-weapon_path = Path(r'C:\Users\g2945\Desktop\jupyter\DMcal\技一覧.csv')
-
-
-df = pd.read_csv(poke_path, encoding='utf_8_sig', index_col=0)
+poke_path = PurePath.joinpath(Path.cwd(), '種族値.csv')
+weapon_path = PurePath.joinpath(Path.cwd(), '技一覧.csv')
+poke_data = pd.read_csv(poke_path, encoding='utf_8_sig', index_col=0)
 weapon = pd.read_csv(weapon_path, encoding='utf_8_sig', index_col=0)
-
-type_list  =  {
+type_list = {
                 'fire':{'normal':1, 'fire':1, 'water':1, 'electric':1, 'grass':1, 'ice':1, 'fighting':1, 'poison':1, 'ground':1,
                        'flying':1, 'psychic':1, 'bug':1, 'rock':0.5, 'ghost':0, 'dragon':1, 'dark':1, 'steel':0.5, 'fairy':1},
                'water':{'normal':1, 'fire':2, 'water':0.5,'electric':1, 'grass':0.5, 'ice':1, 'fighting':1, 'poison':1, 'ground':2.0,
@@ -62,6 +59,9 @@ type_num = {'ほのお':1, 'みず':2, 'むし':3, 'あく':4, 'ドラゴン':5,
 num_type = {1:'fire', 2:'water', 3:'bug', 4:'dark', 5:'dragon', 6:'electric', 7:'fairy', 8:'fighting', 9:'flying',
             10:'ghost', 11:'grass', 12:'ground', 13:'ice', 14:'normal', 15:'poison', 16:'psychic', 17:'rock', 18:'steel', 19:'None'}
 
+cate_num = {'物理': 0, '特殊': 1, '変化': 2}
+num_cate = {0: '物理', 1: '特殊', 2: '変化'}
+
 per_list = {
     'いじっぱり':{'a':1.1, 'b':1, 'c':0.9, 'd':1, 's':1},
     'さみしがり':{'a':1.1, 'b':0.9, 'c':1, 'd':1, 's':1},
@@ -89,7 +89,7 @@ per_list = {
 # --------------------------------------------------
 at_n = input('攻撃側(全角カタカナ)：')
 at_per = input('性格：')
-at = df[df['name'] == at_n]
+at = poke_data[poke_data['name'] == at_n]
 at_type1 = num_type[int(at['type1'])]
 at_type2 = num_type[int(at['type2'])]
 
@@ -106,7 +106,7 @@ c = math.floor(((c+31/2+eff_c/8)+5)*pe_c)
 # --------------------------------------------------
 de_n = input('防御側(全角カタカナ)：')
 de_per = input('性格：')
-de = df[df['name'] == de_n]
+de = poke_data[poke_data['name'] == de_n]
 de_type1 = num_type[int(de['type1'])]
 de_type2 = num_type[int(de['type2'])]
 
@@ -131,12 +131,19 @@ w_type = num_type[w_type]
 power = int(weapon[w_name][1])
 hit = weapon[w_name][2]
 pp = weapon[w_name][3]
-cals = weapon[w_name][4]
+cate = weapon[w_name][4]
+
 
 # タイプ相性計算
-com = type_list[w_type][de_type1] * type_list[w_type][de_type2]
+if not de_type2 == 'None':
+    com = type_list[w_type][de_type1] * type_list[w_type][de_type2]
+else:
+    com = type_list[w_type][de_type1]
 # dmg計算：https://pokemon-wiki.net/%E3%83%80%E3%83%A1%E3%83%BC%E3%82%B8%E8%A8%88%E7%AE%97%E5%BC%8F#damageformula_detail
-base_dmg = math.floor((math.floor(22 * (power*a/b))/50)+2)
+if cate == 0:
+    base_dmg = math.floor((math.floor(22 * (power*a/b))/50)+2)
+elif cate == 1:
+    base_dmg = math.floor((math.floor(22 * (power*c/d))/50)+2)
 ron = [0.85, 0.86, 0.87, 0.88, 0.89, 0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1.0]
 dmg = [base_dmg * r for r in ron]
 # 乱数計算後、タイプ一致判定しつつタイプ相性計算したものをリスト化
@@ -145,9 +152,13 @@ dmg = [dm * 1.5 * com if w_type==at_type1 or w_type==at_type2
 # h_dmg = [(1-((h - dm)/h))*100 for dm in dmg]
 
 print('攻撃側：', at_n, ' /　防御側：', de_n, sep='')
-print('A実数値：', a, ' / B実数値:', b, sep='')
-print('A性格補正：', pe_a, ' /　B性格補正：', pe_b, sep='')
-print('技：', w_name, ' /　威力：', power, sep='')
+if cate == 0:
+    print('A実数値：', a, ' / B実数値:', b, sep='')
+    print('A性格補正：', pe_a, ' /　B性格補正：', pe_b, sep='')
+elif cate == 1:
+    print('C実数値：', c, ' / D実数値:', d, sep='')
+    print('C性格補正：', pe_c, ' /　D性格補正：', pe_d, sep='')
+print('技：', w_name, ' /　威力：', power, ' /　分類：', num_cate[cate], sep='')
 print('----------------------------------------------------')
 if int(h) - math.floor(min(dmg)) <= 0 :
     print('確定1発')
