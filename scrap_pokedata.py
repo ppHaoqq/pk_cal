@@ -6,10 +6,15 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import pandas as pd
 
+# 覚える技判定用に技リスト読み込み
+weapon_path = PurePath.joinpath(Path.cwd(), '技一覧.csv')
+weapon_list = pd.read_csv(weapon_path, encoding='utf_8_sig', index_col=0)
+
 # 日本語でスクレイプしたタイプを数字に変換するための表
-type_num = {'ほのお': 1, 'みず': 2, 'むし': 3, 'あく': 4, 'ドラゴン': 5, 'でんき': 6, 'フェアリー': 7, 'かくとう': 8,
-            'ひこう': 9, 'ゴースト': 10, 'くさ': 11, 'じめん': 12, 'こおり': 13, 'ノーマル': 14, 'どく': 15, 'エスパー': 16,
-            'いわ': 17, 'はがね': 18, '': 19}
+type_num = {'ほのお': 1, 'みず': 2, 'むし': 3, 'あく': 4, 'ドラゴン': 5, 'でんき': 6, 'フェアリー': 7, 'かくとう': 8, 'ひこう': 9,
+            'ゴースト': 10, 'くさ': 11, 'じめん': 12, 'こおり': 13, 'ノーマル': 14, 'どく': 15, 'エスパー': 16, 'いわ': 17,
+            'はがね': 18, '': 19}
+cate_num = {'物理': 0, '特殊': 1, '変化': 2}
 
 main_url = 'https://yakkun.com/swsh/zukan/'
 # seleniumでアクセス
@@ -82,9 +87,16 @@ for i, url in enumerate(urls):
     except:
         type1 = ''
         type2 = ''
+    try:
+        weapon_table = soup2.select('.move_name_cell')
+        wl = [t.text.replace('[遺伝経路]', '') for t in weapon_table]
+        # 削除技は技一覧で照会してもはじかれるよう設定
+        wl = [w for w in wl if w in weapon_list.columns]
+    except:
+        wl = []
 
-    poke = {'name': name, 'type1': type_num[type1], 'type2': type_num[type2], 'weight': weight, 'h': h, 'a': a, 'b': b,
-            'c': c, 'd': d, 's': s}
+    poke = {'name': name, 'type1': type_num[type1], 'type2': type_num[type2], 'weight': weight,
+            'h': h, 'a': a, 'b': b, 'c': c, 'd': d, 's': s, 'weapon': wl}
 
     df = df.append(poke, ignore_index=True)
 # 進捗表示
@@ -130,4 +142,4 @@ for i, url in enumerate(urls):
     elif prog == 100:
         print(round(prog), '%完了', sep='')
 
-df.to_csv(save_path, encoding='utf_8_sig', mode='a', header=False)
+df.to_csv(save_path, encoding='utf_8_sig')

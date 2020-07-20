@@ -1,6 +1,7 @@
 import pandas as pd
 import math
 from pathlib import Path, PurePath
+import sys
 
 poke_path = PurePath.joinpath(Path.cwd(), '種族値.csv')
 weapon_path = PurePath.joinpath(Path.cwd(), '技一覧.csv')
@@ -125,13 +126,19 @@ d = int(de['d'])
 d = math.floor(((d+31/2+eff_d/8)+5)*pe_d)
 
 # 技選択
+# 技選択
 w_name = input('技名(全角)：')
-w_type = int(weapon[w_name][0])
-w_type = num_type[w_type]
-power = int(weapon[w_name][1])
-hit = weapon[w_name][2]
-pp = weapon[w_name][3]
-cate = weapon[w_name][4]
+if not w_name in list(at['weapon'])[0]:
+    print(at_n, 'は', w_name, 'を覚えません。', sep='')
+try:
+    w_type = int(weapon[w_name][0])
+    w_type = num_type[w_type]
+    power = int(weapon[w_name][1])
+    hit = weapon[w_name][2]
+    pp = weapon[w_name][3]
+    cate = weapon[w_name][4]
+except KeyError:
+    sys.exit()
 
 
 # タイプ相性計算
@@ -154,10 +161,10 @@ dmg = [dm * 1.5 * com if w_type==at_type1 or w_type==at_type2
 print('攻撃側：', at_n, ' /　防御側：', de_n, sep='')
 if cate == 0:
     print('A実数値：', a, ' / B実数値:', b, sep='')
-    print('A性格補正：', pe_a, ' /　B性格補正：', pe_b, sep='')
+    print('A性格補正：', float(pe_a), ' /　B性格補正：', float(pe_b), sep='')
 elif cate == 1:
     print('C実数値：', c, ' / D実数値:', d, sep='')
-    print('C性格補正：', pe_c, ' /　D性格補正：', pe_d, sep='')
+    print('C性格補正：', float(pe_c), ' /　D性格補正：', float(pe_d), sep='')
 print('技：', w_name, ' /　威力：', power, ' /　分類：', num_cate[cate], sep='')
 print('----------------------------------------------------')
 if int(h) - math.floor(min(dmg)) <= 0 :
